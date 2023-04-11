@@ -7,7 +7,7 @@ import os from "os";
 export default defineEventHandler(async (e) => {
 	const query = getQuery(e);
 
-	const limit = query.limit || 1000;
+	const limit = query.limit || 5000;
 	const num_words = query.num || 25;
 	const selected_char = query.char || "";
 

@@ -12,6 +12,7 @@
     "nuxt": "^3.3.3"
   },
   "dependencies": {
+    "@nuxtjs/tailwindcss": "^6.6.5",
     "d3-array": "^3.2.3"
   }
 }
