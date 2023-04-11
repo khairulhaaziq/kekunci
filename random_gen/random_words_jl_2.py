@@ -1,51 +1,71 @@
+import sys
 import json
 import bisect
 import random
+import time
+import os
+import psutil
 
-# Load the index data
-with open('../data/dataset3_index.json', 'r') as f:
-    index_data = json.load(f)
+index_data = {}
+limit = int(sys.argv[1]) if len(sys.argv) > 1 else 1000
+num_words = int(sys.argv[2]) if len(sys.argv) > 2 else 25
+start_time = time.time()
 
-# Get the list of indices
+with open('../data/dataset3_index.jl', 'r') as f:
+    for i, line in enumerate(f):
+        if i < limit:
+            key, value = list(json.loads(line.strip()).items())[0]
+            index_data[key] = value
+        else:
+            load_index_time = time.time() - start_time
+            break
+
 indices = list(index_data.keys())
-
-# Precompute cumulative weights
 cum_weights = []
 total_weight = 0
 for i in range(len(indices)):
     total_weight += 1 / (i + 1)
     cum_weights.append(total_weight)
 
-#with open('../data/cum_weights.json', 'r')as f:
-#   cum_weights = json.load(f)
+elapsed_time = time.time() - start_time
 
-print('finished counting weights')
 
-# Custom weighted random choice function
 def weighted_choice(indices, cum_weights):
     r = random.uniform(0, cum_weights[-1])
     idx = bisect.bisect_left(cum_weights, r)
     return indices[idx]
 
-# Select 25 words using the weighted_choice function
+
 selected_words = []
 selected_word_objects = []
+selected_indices = set()
 
-for _ in range(25):
+while len(selected_words) < num_words:
     index = weighted_choice(indices, cum_weights)
-    byte_offset = index_data[index]
+    if index not in selected_indices:
+        selected_indices.add(index)
+        byte_offset = index_data[index]
 
-    # Access the word in the JSONL file using the byte offset
-    with open('../data/dataset3.jl', 'r') as f:
-        f.seek(byte_offset)
-        line = f.readline()
-        entry = json.loads(line)
-        word = list(entry.keys())[0]
-        selected_words.append(word)
-        selected_word_objects.append({word: entry[word]})
+        with open('../data/dataset3.jl', 'r') as f:
+            f.seek(byte_offset)
+            line = f.readline()
+            entry = json.loads(line)
+            word = list(entry.keys())[0]
+            selected_words.append(word)
+            selected_word_objects.append({word: entry[word]})
 
-# Print the word objects
 print(json.dumps(selected_word_objects, indent=2))
-
-# Print the 25 words
 print(" ".join(selected_words))
+print(f"Load index time: {load_index_time:.3f} seconds")
+print(f"Weight time: {elapsed_time:.3f} seconds")
+#
+#cpu_percent = psutil.cpu_percent(interval=1)
+#memory_percent = psutil.virtual_memory().percent
+
+# output_data = {
+#     "elapsed_time": elapsed_time,
+#     "cpu_percent": cpu_percent,
+#     "memory_percent": memory_percent
+# }
+# with open("python_output.jl", "a") as f:
+#     f.write(json.dumps(output_data) + '\n')
