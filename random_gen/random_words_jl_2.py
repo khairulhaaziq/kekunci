@@ -9,6 +9,7 @@ import psutil
 index_data = {}
 limit = int(sys.argv[1]) if len(sys.argv) > 1 else 1000
 num_words = int(sys.argv[2]) if len(sys.argv) > 2 else 25
+selected_char = sys.argv[3] if len(sys.argv) > 3 else ''
 start_time = time.time()
 
 with open('../data/dataset3_index.jl', 'r') as f:
@@ -36,6 +37,11 @@ def weighted_choice(indices, cum_weights):
     return indices[idx]
 
 
+def checkContainSelectedChar(word):
+    if (selected_char in word):
+        return True
+    return False
+
 selected_words = []
 selected_word_objects = []
 selected_indices = set()
@@ -51,8 +57,9 @@ while len(selected_words) < num_words:
             line = f.readline()
             entry = json.loads(line)
             word = list(entry.keys())[0]
-            selected_words.append(word)
-            selected_word_objects.append({word: entry[word]})
+            if (selected_char == "" or (selected_char and (checkContainSelectedChar(word)))):
+                selected_words.append(word)
+                selected_word_objects.append({word: entry[word]})
 
 print(json.dumps(selected_word_objects, indent=2))
 print(" ".join(selected_words))

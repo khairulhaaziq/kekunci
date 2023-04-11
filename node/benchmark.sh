@@ -17,6 +17,7 @@ echo "Running Node.js benchmark:"
 
 [ -e file ] && rm node_times.txt
 [ -e file ] && rm node_output.jl
+[ -e file ] && rm node_times.txt
 
 for i in {1..100}
 do
@@ -33,6 +34,7 @@ echo "Running Python benchmark:"
 
 [ -e file ] && rm python_times.txt
 [ -e file ] && rm python_output.jl
+[ -e file ] && rm python_times.txt
 
 for i in {1..100}
 do

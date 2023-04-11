@@ -6,6 +6,7 @@ import os from 'os';
 
 const limit = parseInt(process.argv[2]) || 1000;
 const num_words = parseInt(process.argv[3]) || 25;
+const selected_char = process.argv[4] || '';
 const startTime = Date.now();
 let loadIndexTime;
 
@@ -50,6 +51,13 @@ function readEntryFromFile(fd, byteOffset, callback) {
       callback(null, entry);
     }
   });
+}
+
+function checkContainSelectedChar(word) {
+  if (word.includes(selected_char)){
+    return true
+  }
+  return false
 }
 
 (async function main() {
@@ -98,7 +106,7 @@ function readEntryFromFile(fd, byteOffset, callback) {
     const batchResults = await Promise.all(batchPromises);
     for (const entry of batchResults) {
       const word = Object.keys(entry)[0];
-      if (selectedWords.length < num_words) {
+      if (selectedWords.length < num_words && (selected_char ? checkContainSelectedChar(word) : true)) {
         selectedWords.push(word);
         selectedWordObjects.push({ [word]: entry[word] });
       }
