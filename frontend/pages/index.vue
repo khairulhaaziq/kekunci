@@ -1,13 +1,23 @@
 <template>
 	<div class="p-10 max-w-7xl w-full">
-		<h1 class="text-7xl font-bold mb-10">kekunci</h1>
-		<div class="flex h-9 mb-6 shadow-sm w-fit">
+		<h1 class="text-7xl font-bold mb-6 mt-10">kekunci</h1>
+		<div class="flex h-9 mb-8 shadow-sm w-fit">
+			<button
+				:class="`hover:bg-neutral-700 hover:text-white/90 font-medium border-y border-r px-3 border-neutral-400 flex-none flex items-center justify-center first:border-l first:rounded-l last:rounded-r ${
+					!currentChar
+						? 'bg-neutral-600 text-white'
+						: 'text-white/60'
+				}`"
+				@click="fetchData('')"
+			>
+				No key
+			</button>
 			<button
 				v-for="i in 26"
-				:class="`font-medium border-y border-r w-9 border-neutral-400 flex-none flex items-center justify-center first:border-l first:rounded-l last:rounded-r ${
+				:class="`hover:bg-neutral-700 hover:text-white/90 font-medium border-y border-r w-9 border-neutral-400 flex-none flex items-center justify-center first:border-l first:rounded-l last:rounded-r ${
 					currentChar ===
 					String.fromCharCode(i + 96)
-						? 'bg-neutral-500 text-white'
+						? 'bg-neutral-600 text-white'
 						: 'text-white/60'
 				}`"
 				@click="
@@ -30,7 +40,7 @@
 		></div>
 		<div
 			@click="focusInput()"
-			class="transition-all ease-linear duration-1000 mb-10 min-h-80 h-80 bg-neutral-800 pt-3 pb-4 px-6 rounded-xl w-full text-5xl leading-[54px]"
+			class="transition-all ease-linear duration-1000 mb-10 min-h-[20rem] bg-neutral-800 pt-3 pb-6 px-6 rounded-xl w-full text-5xl leading-[54px]"
 		>
 			<template v-for="(word, index) in allData">
 				<span
@@ -166,11 +176,7 @@ const {
 });
 
 async function fetchData(char = "") {
-	if (char) {
-		currentChar.value = char.charAt(0);
-	} else {
-		char = currentChar.value;
-	}
+	currentChar.value = char.charAt(0);
 	typedData.value = [];
 	allData.value = [];
 	resetIndexes();
