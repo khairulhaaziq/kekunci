@@ -1,1 +1,7 @@
-<template><div class="flex items-center"><slot /></div></template>
+<template><div class="flex justify-center bg-black text-white min-h-screen"><slot /></div></template>
+
+<style>
+body {
+        background-color: black;
+}
+</style>
