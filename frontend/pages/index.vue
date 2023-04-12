@@ -1,20 +1,20 @@
 <template>
-	<div class="p-10 max-w-7xl w-full">
-		<h1 class="text-7xl font-bold mb-6 mt-10">kekunci</h1>
-		<div class="flex h-9 mb-8 shadow-sm w-fit">
+	<div class="pb-10 px-10 pt-8 max-w-7xl w-full">
+		<h1 class="text-7xl font-bold mb-6">kekunci</h1>
+		<div class="flex mb-8 shadow-sm w-fit max-w-full overflow-scroll">
 			<button
-				:class="`hover:bg-neutral-700 hover:text-white/90 font-medium border-y border-r px-3 border-neutral-400 flex-none flex items-center justify-center first:border-l first:rounded-l last:rounded-r ${
+				:class="`h-9 hover:bg-neutral-700 hover:text-white/90 font-medium border-y border-r px-3 border-neutral-400 flex-none flex items-center justify-center first:border-l first:rounded-l last:rounded-r ${
 					!currentChar
 						? 'bg-neutral-600 text-white'
 						: 'text-white/60'
 				}`"
 				@click="fetchData('')"
 			>
-				No key
+				All key
 			</button>
 			<button
 				v-for="i in 26"
-				:class="`hover:bg-neutral-700 hover:text-white/90 font-medium border-y border-r w-9 border-neutral-400 flex-none flex items-center justify-center first:border-l first:rounded-l last:rounded-r ${
+				:class="`hover:bg-neutral-700 hover:text-white/90 font-medium border-y border-r h-9 w-9 border-neutral-400 flex-none flex items-center justify-center first:border-l first:rounded-l last:rounded-r ${
 					currentChar ===
 					String.fromCharCode(i + 96)
 						? 'bg-neutral-600 text-white'
@@ -32,19 +32,27 @@
 			</button>
 		</div>
 		<div
-			v-if="allData.length"
-			:class="`fixed h-12 w-2 bg-[#3992FF] transition-all duration-100 ease-linear`"
+			v-if="
+				currentActive &&
+				currentActive.id === 'MasterInput'
+			"
+			:class="`fixed z-50 h-12 w-2 bg-[#3992FF] transition-all duration-100 ease-linear`"
 			:style="`left: ${cursorLeft - 2}px; top: ${
 				cursorTop + 6
 			}px`"
 		></div>
 		<div
-			@click="focusInput()"
-			class="transition-all ease-linear duration-1000 mb-10 min-h-[20rem] bg-neutral-800 pt-3 pb-6 px-6 rounded-xl w-full text-5xl leading-[54px]"
+			@click.prevent.stop="
+				currentActive &&
+				currentActive.id === 'MasterInput'
+					? ''
+					: focusInput()
+			"
+			:class="`relative transition-all ease-linear duration-1000 mb-6 min-h-[16rem] bg-neutral-800 pt-3 pb-6 px-6 rounded-xl w-full text-5xl leading-[54px]`"
 		>
 			<template v-for="(word, index) in allData">
 				<span
-					:class="`ease-linear transition-opacity duration-1000 ${
+					:class="` pointer-events-none ease-linear transition-opacity duration-1000 tracking-wide ${
 						index === currentWordNum &&
 						separator
 							? 'relative'
@@ -93,6 +101,26 @@
 					></span
 				>
 			</template>
+			<div
+				v-if="
+					!currentActive ||
+					(currentActive &&
+						currentActive.id !==
+							'MasterInput')
+				"
+				@click="
+					!allData.length
+						? fetchData(currentChar)
+						: ''
+				"
+				class="inset-0 absolute right-0 items-center justify-center flex cursor-pointer backdrop-blur-sm bg-neutral-800/60"
+			>
+				<div
+					class="text-neutral-200 pointer-events-none"
+				>
+					press to start
+				</div>
+			</div>
 		</div>
 		<input
 			type="text"
@@ -100,25 +128,165 @@
 			@keydown="watchKeydown"
 			style="opacity: 0%; position: absolute"
 		/>
-		<div class="grid grid-cols-2 gap-6">
-			<div>
-				<div>
-					<span v-for="d in typedData">{{
-						d.key
-					}}</span>
+		<div class="grid grid-cols-10 gap-x-8">
+			<div class="col-span-2 flex flex-col gap-5 py-4">
+				<div class="font-semibold text-xl">
+					All games
 				</div>
-				<div>{{ accArr }}</div>
-				<div>{{ accuracies }}</div>
-				<div>{{ totalTime }}</div>
+				<div
+					class="flex flex-col gap-3 max-h-96 overflow-scroll"
+				>
+				<div v-if="!totalTime.length" class="text-sm text-neutral-400 border border-neutral-700 px-4 py-2 text-center">Your past games will show up here!</div>
+					<div
+						v-for="(
+							game, index
+						) in totalTime"
+						class="border-neutral-700 border px-4 py-2 grid grid-cols-2 gap-x-2 align-top"
+					>
+						<div class="">
+							<p
+								class="text-neutral-300 text-sm leading-4"
+							>
+								wpm
+							</p>
+							<p
+								class="text-xl font-medium"
+							>
+								{{
+									totalTime[totalTime.length-1-index].toFixed(
+										1
+									)
+								}}
+							</p>
+						</div>
+						<div class="">
+							<p
+								class="text-neutral-300 text-sm leading-4"
+							>
+								acc
+							</p>
+							<p
+								class="text-xl font-medium"
+							>
+								{{
+									accArr[
+										totalTime.length - index - 1
+									].toFixed(
+										1
+									)
+								}}
+							</p>
+						</div>
+					</div>
+				</div>
 			</div>
-			<div>
-				<!--<div class="border border-neutral-700 rounded-lg bg-neutral-900 h-96 overflow-scroll relative text-sm"><div class="grid grid-cols-6 py-4 px-6 border-b border-neutral-700 sticky top-0 bg-neutral-800/50 backdrop-blur-md"><div class="col-span-3">Character</div> <div class="col-span-1">Timing</div> <div class="col-span-2 text-right">Status</div></div><div v-for="data,index in flatData" class="grid grid-cols-6 py-4 px-8 odd:bg-neutral-800/30"><div class="col-span-1">{{ index+1 }}</div><div class="col-span-2">{{ data.character }}</div><div  class="col-span-1">{{ data.timing }}</div><div class="col-span-2 text-right">{{ data.status }}</div></div></div>-->
+			<div class="col-span-8 grid grid-cols-10">
+				<div
+					class="col-span-2 grid row-span-2 pt-4 pb-4"
+				>
+					<div>
+						<div
+							class="text-4xl mb-1 text-neutral-400"
+						>
+							wpm
+						</div>
+						<div class="text-5xl text-[#3DEFE9]">
+							{{
+								totalTime.length
+									? totalTime[
+											totalTime.length -
+												1
+									  ].toFixed(
+											2
+									  )
+									: "0.00"
+							}}
+						</div>
+					</div>
+					<div>
+						<div
+							class="text-4xl mb-1 text-neutral-400"
+						>
+							acc
+						</div>
+						<div class="text-5xl text-[#3DEFE9]">
+							{{
+								accArr.length
+									? accArr[
+											accArr.length -
+												1
+									  ].toFixed(
+											2
+									  )
+									: "0.00"
+							}}
+						</div>
+					</div>
+				</div>
+				<div class="col-span-8 row-span-2 -mb-4">
+					<ClientOnly>
+						<Chart
+							:data="sortedDatasetData"
+							:columns="sortedColumns"
+						/>
+					</ClientOnly>
+					<!--<div class="border border-neutral-700 rounded-lg bg-neutral-900 h-96 overflow-scroll relative text-sm"><div class="grid grid-cols-6 py-4 px-6 border-b border-neutral-700 sticky top-0 bg-neutral-800/50 backdrop-blur-md"><div class="col-span-3">Character</div> <div class="col-span-1">Timing</div> <div class="col-span-2 text-right">Status</div></div><div v-for="data,index in flatData" class="grid grid-cols-6 py-4 px-8 odd:bg-neutral-800/30"><div class="col-span-1">{{ index+1 }}</div><div class="col-span-2">{{ data.character }}</div><div  class="col-span-1">{{ data.timing }}</div><div class="col-span-2 text-right">{{ data.status }}</div></div></div>-->
+				</div>
+				<div class="col-span-2">
+					<div class="text-neutral-400">
+						test type
+					</div>
+					<p class="text-3xl">
+						{{
+							currentChar
+								? `char ${currentChar}`
+								: "all key"
+						}}
+					</p>
+				</div>
+				<div class="col-span-2">
+					<div class="text-neutral-400">raw</div>
+					<p class="text-3xl">0</p>
+				</div>
+				<div class="col-span-2">
+					<div class="text-neutral-400">
+						characters
+					</div>
+					<p class="text-3xl">
+						{{
+							accuracies
+								? accuracies.total_chars
+								: 0
+						}}/{{
+							accuracies
+								? accuracies.error_chars
+								: 0
+						}}
+					</p>
+				</div>
+				<div class="col-span-2">
+					<div class="text-neutral-400">
+						consistencies
+					</div>
+					<p class="text-3xl">0</p>
+				</div>
+				<div class="col-span-2">
+					<div class="text-neutral-400">time</div>
+					<p class="text-3xl">
+						{{
+							accuracies
+								? accuracies.total_time
+								: "0.00"
+						}}
+					</p>
+				</div>
 			</div>
 		</div>
 	</div>
 </template>
 
 <script setup>
+const currentActive = ref();
 const loading = ref(false);
 const model = ref("");
 const typedData = ref([]);
@@ -156,7 +324,7 @@ const accuracies = computed(() => {
 		total_chars++;
 	}
 	return {
-		total_time: initialValue,
+		total_time: parseFloat(initialValue.toFixed(2)),
 		total_chars,
 		correct_chars,
 		error_chars,
@@ -164,6 +332,29 @@ const accuracies = computed(() => {
 });
 const accArr = ref([]);
 const startingTime = ref(0);
+const columns = ['a', 'b', 'c', 'd', 'e','f', 'g', 'h', 'i', 'j','k', 'l', 'm', 'n', 'o','p', 'q', 'r', 's', 't','u', 'v', 'w', 'x', 'y','z'];
+const datasetObject = ref([{char: 'a', count: 0, value: 0},{char: 'b', count: 0, value: 0},{char: 'c', count: 0, value: 0},{char: 'd', count: 0, value: 0},{char: 'e', count: 0, value: 0},{char: 'f', count: 0, value: 0},{char: 'g', count: 0, value: 0},{char: 'h', count: 0, value: 0},{char: 'i', count: 0, value: 0},{char: 'j', count: 0, value: 0},{char: 'k', count: 0, value: 0},{char: 'l', count: 0, value: 0},{char: 'm', count: 0, value: 0},{char: 'n', count: 0, value: 0},{char: 'o', count: 0, value: 0},{char: 'p', count: 0, value: 0},{char: 'q', count: 0, value: 0},{char: 'r', count: 0, value: 0},{char: 's', count: 0, value: 0},{char: 't', count: 0, value: 0},{char: 'u', count: 0, value: 0},{char: 'v', count: 0, value: 0},{char: 'w', count: 0, value: 0},{char: 'x', count: 0, value: 0},{char: 'y', count: 0, value: 0},{char: 'z', count: 0, value: 0}]);
+const dataset = computed(()=>{
+	return datasetObject.value.flatMap((data)=>{
+		return data.value
+	})
+})
+
+const sortedDataset = computed(()=>{
+	return datasetObject.value.filter(i=>i.count>0).sort((x, y)=>{return y.value - x.value})
+})
+
+const sortedDatasetData = computed(()=>{
+	return sortedDataset.value.flatMap((data)=>{
+		return data.value
+	})
+})
+
+const sortedColumns = computed(()=>{
+	return sortedDataset.value.flatMap((data)=>{
+		return data.char
+	})
+})
 
 const {
 	data: words,
@@ -177,35 +368,48 @@ const {
 
 async function fetchData(char = "") {
 	currentChar.value = char.charAt(0);
-	typedData.value = [];
-	allData.value = [];
 	resetIndexes();
 	const { data } = await useFetch(
 		`api/words?char=${currentChar.value.charAt(0)}`
 	);
 	words.value = data.value;
-	data.value.all_words.map((i) => {
-		const characters = i.split("");
-		const charData = [];
-		for (const char of characters) {
-			charData.push({
-				character: char,
-				timing: 0,
-				status: "pending",
-			});
-		}
-
-		allData.value.push({ word: i, characters: charData });
-	});
+	fillData();
 	focusInput();
 }
 
+function fillData() {
+	allData.value = [];
+	if (words.value) {
+		words.value.all_words.map((i) => {
+			const characters = i.split("");
+			const charData = [];
+			for (const char of characters) {
+				charData.push({
+					character: char,
+					timing: 0,
+					status: "pending",
+				});
+			}
+
+			allData.value.push({ word: i, characters: charData });
+		});
+	}
+}
+
 function resetIndexes() {
+	fillData();
+	typedData.value = [];
 	currentWordNum.value = 0;
 	currentCharNum.value = 0;
 	currentPendingWordIndex.value = 0;
 	separator.value = false;
 }
+
+watch(currentActive, () => {
+	if (currentActive.value.id !== "MasterInput") {
+		resetIndexes();
+	}
+});
 
 function focusInput() {
 	document.getElementById("MasterInput").focus();
@@ -291,6 +495,9 @@ function watchKeydown(e) {
 			} else {
 				currentObj.status = "correct";
 			}
+			const currCharObj = datasetObject.value.find(i=>i.char === e.key)
+			currCharObj.count++;
+			currCharObj.value = (((time - finalKeydown) / 1000) + currCharObj.value)/currCharObj.count;
 			currentObj.timing =
 				currentWordNum.value + currentCharNum.value == 0
 					? 0
@@ -304,17 +511,25 @@ function watchKeydown(e) {
 			) {
 				totalTime.value.push(
 					parseFloat(
-						25 /
+						(
+							25 /
 							((time -
 								startingTime.value) /
 								1000 /
 								60)
-					).toFixed(2)
+						).toFixed(2)
+					)
 				);
 				accArr.value.push(
-					(accuracies.value.correct_chars /
-						accuracies.value.total_chars) *
-						100
+					parseFloat(
+						(
+							(accuracies.value
+								.correct_chars /
+								accuracies.value
+									.total_chars) *
+							100
+						).toFixed(2)
+					)
 				);
 				fetchData(currentChar.value);
 			} else if (
@@ -348,6 +563,7 @@ onMounted(() => {
 
 			cursorLeft.value = parseFloat(rect.left);
 			cursorTop.value = parseFloat(rect.top);
+			currentActive.value = document.activeElement;
 		}
 		requestAnimationFrame(getCursorPosition);
 	}
